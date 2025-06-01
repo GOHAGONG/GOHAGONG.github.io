@@ -4,7 +4,27 @@ import { initStats, initCamera, initRenderer, initOrbitControls,
     initDefaultDirectionalLighting } from './util.js';
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color( 0xB0E0E6 );
+// scene.background = new THREE.Color( 0x00000 );
+const textureLoader = new THREE.TextureLoader();
+
+const urls = [
+    './assets/Textures/Background/right.png',
+    './assets/Textures/Background/left.png',
+    './assets/Textures/Background/top.png',
+    './assets/Textures/Background/bottom.png',
+    './assets/Textures/Background/front.png',
+    './assets/Textures/Background/back.png'
+];
+
+var cubeLoader = new THREE.CubeTextureLoader();
+scene.background = cubeLoader.load(urls);
+
+var cubeMaterial = new THREE.MeshStandardMaterial({
+    envMap: scene.background,
+    color: 0xffffff,
+    metalness: 1,
+    roughness: 0,
+});
 
 const renderer = initRenderer();
 
