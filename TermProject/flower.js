@@ -5,41 +5,63 @@ import { initStats, initCamera, initRenderer, initOrbitControls,
 
 const scene = new THREE.Scene();
 // scene.background = new THREE.Color( 0x00000 );
-const textureLoader = new THREE.TextureLoader();
 
+// 하늘 배경 -> 더 어울리는 걸로 변경하자
 const urls = [
-    './assets/Textures/Background/right.png',
-    './assets/Textures/Background/left.png',
-    './assets/Textures/Background/top.png',
-    './assets/Textures/Background/bottom.png',
-    './assets/Textures/Background/front.png',
-    './assets/Textures/Background/back.png'
+    './assets/Textures/Background/px.png',
+    './assets/Textures/Background/nx.png',
+    './assets/Textures/Background/py.png',
+    './assets/Textures/Background/ny.png',
+    './assets/Textures/Background/pz.png',
+    './assets/Textures/Background/nz.png'
+    
 ];
 
 var cubeLoader = new THREE.CubeTextureLoader();
 scene.background = cubeLoader.load(urls);
 
-var cubeMaterial = new THREE.MeshStandardMaterial({
-    envMap: scene.background,
-    color: 0xffffff,
-    metalness: 1,
-    roughness: 0,
-});
 
 const renderer = initRenderer();
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 const camera = initCamera();
 camera.position.set( 200, 200, 500 );
 scene.add(camera);
 
-initDefaultDirectionalLighting(scene);
+// 햇빛
+const sunLight = new THREE.DirectionalLight(0xffffff, 2);
+sunLight.position.set(200, 300, 200);
+sunLight.castShadow = true;
+
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 1000;
+sunLight.shadow.camera.left = -200;
+sunLight.shadow.camera.right = 200;
+sunLight.shadow.camera.top = 200;
+sunLight.shadow.camera.bottom = -200;
+
+scene.add(sunLight);
+
+// 주변광
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+scene.add(ambientLight);
 
 const orbitControls = initOrbitControls(camera, renderer);
 orbitControls.target.set(0, 0, 0); 
 orbitControls.update();
 
+// 필드 로드
 const loader = new GLTFLoader();
-loader.load('./assets/models/TestScene.glb', (gltf) => {
+loader.load('./assets/models/GameField.glb', (gltf) => {
+  gltf.scene.traverse(function (child) {
+    if (child.isMesh) {
+      child.castShadow = true;
+      child.receiveShadow = true;
+    }
+  });
+  gltf.scene.position.set(100, 0, -200)
   scene.add(gltf.scene);
 });
 
@@ -49,3 +71,13 @@ function animate() {
     requestAnimationFrame( animate );
     renderer.render( scene, camera );
 }
+
+window.addEventListener('resize', () => {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(width, height);
+});
